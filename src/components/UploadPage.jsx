@@ -242,7 +242,7 @@
 import React, { useEffect, useState } from "react";
 import DocumentTable from "./DocumentTable";
 import logo from "../assets/jnj-logo.png";
-import { getDocuments, uploadDocument, deleteDocument } from "../services/api";
+import { getDocuments, uploadDocument, deleteDocument } from "../api/api";
 
 const UploadPage = ({ onBack }) => {
   const [documents, setDocuments] = useState([]);
