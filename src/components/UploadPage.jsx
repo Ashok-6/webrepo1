@@ -231,16 +231,24 @@ export default UploadPage;
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
 // import React, { useEffect, useState } from "react";
-// import Header from "./Header";
 // import DocumentTable from "./DocumentTable";
 // import logo from "../assets/jnj-logo.png";
 
-// // Build a safe API base:
-// // - Vite exposes env vars prefixed with VITE_ via import.meta.env
-// // - If VITE_API_URL is not set, fallback to localhost for local dev
-// const API_ROOT = (import.meta.env.VITE_API_URL || "http://localhost:8087").replace(/\/$/, "");
-// const API_BASE = `${API_ROOT}/api/documents`;
+// // API base from env or fallback to localhost
+// const API_BASE = (import.meta.env.VITE_API_URL || "http://localhost:8087") + "/api/documents";
 
 // const UploadPage = ({ onBack }) => {
 //   const [documents, setDocuments] = useState([]);
@@ -249,17 +257,15 @@ export default UploadPage;
 //   const [error, setError] = useState("");
 //   const [loading, setLoading] = useState(false);
 
+//   // Fetch documents from backend
 //   const fetchDocs = async () => {
 //     setError("");
 //     try {
-//       const res = await fetch(API_BASE, { method: "GET" });
-//       if (!res.ok) {
-//         const txt = await res.text();
-//         throw new Error(txt || `Failed to fetch documents (${res.status})`);
-//       }
+//       const res = await fetch(API_BASE);
+//       if (!res.ok) throw new Error("Failed to fetch documents");
 //       const data = await res.json();
 //       const normalized = (data || []).map((d) => ({
-//         id: d.id || d._id || d.documentId,
+//         id: d.id || d._id,
 //         name: d.name || d.filename,
 //         contentType: d.type || d.contentType,
 //         size: d.size,
@@ -267,14 +273,14 @@ export default UploadPage;
 //       }));
 //       setDocuments(normalized);
 //     } catch (err) {
-//       console.error("fetchDocs:", err);
+//       console.error(err);
 //       setError("Unable to load documents from server.");
+//       setDocuments([]);
 //     }
 //   };
 
 //   useEffect(() => {
 //     fetchDocs();
-//     // eslint-disable-next-line react-hooks/exhaustive-deps
 //   }, []);
 
 //   const handleFileSelect = (e) => {
@@ -283,32 +289,23 @@ export default UploadPage;
 //     setError("");
 //   };
 
+//   // Delete document from server
 //   const deleteServerDoc = async (id) => {
-//     const res = await fetch(`${API_BASE}/${encodeURIComponent(id)}`, {
-//       method: "DELETE",
-//     });
-//     if (!res.ok) {
-//       const txt = await res.text();
-//       throw new Error(txt || "Delete failed");
-//     }
+//     const res = await fetch(`${API_BASE}/${encodeURIComponent(id)}`, { method: "DELETE" });
+//     if (!res.ok) throw new Error("Delete failed");
 //     return true;
 //   };
 
+//   // Upload a single file
 //   const uploadSingleFile = async (file) => {
 //     const fd = new FormData();
 //     fd.append("file", file);
-//     // If your backend expects other fields, add them here
-//     const res = await fetch(`${API_BASE}/upload`, {
-//       method: "POST",
-//       body: fd,
-//     });
+//     const res = await fetch(`${API_BASE}/upload`, { method: "POST", body: fd });
 //     if (!res.ok) {
 //       const text = await res.text();
 //       throw new Error(text || `Upload failed for ${file.name}`);
 //     }
-//     // assume server returns JSON or text; attempt to parse JSON first
-//     const ct = res.headers.get("content-type") || "";
-//     return ct.includes("application/json") ? await res.json() : await res.text();
+//     return await res.json();
 //   };
 
 //   const handleUpload = async () => {
@@ -332,6 +329,7 @@ export default UploadPage;
 //     setLoading(true);
 //     setError("");
 //     try {
+//       // Delete duplicates if confirmed
 //       if (replaceAll) {
 //         for (const dup of duplicates) {
 //           const idToDelete = nameToId.get(dup.name);
@@ -349,12 +347,13 @@ export default UploadPage;
 
 //       const uploadedNames = [];
 //       const failedNames = [];
+
 //       for (const file of filesToUpload) {
 //         try {
 //           await uploadSingleFile(file);
 //           uploadedNames.push(file.name);
 //         } catch (err) {
-//           console.error("uploadSingleFile:", err);
+//           console.error(err);
 //           failedNames.push(file.name);
 //         }
 //       }
@@ -363,13 +362,11 @@ export default UploadPage;
 //       const parts = [];
 //       if (uploadedNames.length) parts.push(`${uploadedNames.length} uploaded`);
 //       if (failedNames.length) parts.push(`${failedNames.length} failed`);
-//       setMessage(
-//         `Upload complete (${parts.join(", ")}) at ${new Date().toLocaleTimeString()}`
-//       );
+//       setMessage(`Upload complete (${parts.join(", ")}) at ${new Date().toLocaleTimeString()}`);
 //       setSelectedFiles([]);
 //     } catch (err) {
-//       console.error("handleUpload:", err);
-//       setError("Upload failed. See console for details.");
+//       console.error(err);
+//      // setError("Upload failed. Check console for details.");
 //     } finally {
 //       setLoading(false);
 //       setTimeout(() => setMessage(""), 4000);
@@ -385,7 +382,7 @@ export default UploadPage;
 //       setMessage("Deleted");
 //       setTimeout(() => setMessage(""), 2000);
 //     } catch (err) {
-//       console.error("handleDelete:", err);
+//       console.error(err);
 //       setError("Delete failed");
 //     } finally {
 //       setLoading(false);
@@ -393,15 +390,11 @@ export default UploadPage;
 //   };
 
 //   const handleView = (doc) => {
-//     // download/view endpoint
-//     const url = `${API_BASE}/download/${encodeURIComponent(doc.id)}`;
-//     window.open(url, "_blank");
+//     window.open(`${API_BASE}/download/${encodeURIComponent(doc.id)}`, "_blank");
 //   };
 
 //   return (
 //     <div style={{ minHeight: "100vh", background: "#f9f9f9" }}>
-//       {/* <Header /> */}
-
 //       <div style={{ display: "flex", justifyContent: "center", padding: 28 }}>
 //         <div
 //           style={{
@@ -412,21 +405,21 @@ export default UploadPage;
 //             boxShadow: "0 4px 12px rgba(0,0,0,0.06)",
 //           }}
 //         >
-//           <div style={{ display: "flex", justifyContent: "flex-end", marginBottom: "20px" }}>
-//             <img src={logo} alt="JnJ Logo" style={{ height: "25px" }} />
+//           {/* Header */}
+//           <div style={{ display: "flex", justifyContent: "flex-end", marginBottom: 20 }}>
+//             <img src={logo} alt="Logo" style={{ height: 25 }} />
 //           </div>
-//           <br />
-//           <h2 style={{ margin: 0 }}>Upload Documents</h2>
-//           <br />
+
+//           <h2 style={{ margin: 0, marginBottom: 16 }}>Upload Documents</h2>
+
 //           <input
 //             type="file"
 //             multiple
 //             onChange={handleFileSelect}
 //             accept=".jpeg,.jpg,.png,.pdf,.docx"
-//             style={{ width: "100%", marginBottom: 16 }}
+//             style={{ width: "100%", marginBottom: 12 }}
 //           />
-
-//           <div style={{ color: "#666", marginBottom: 12 }}>Allowed: JPEG, PNG, PDF, DOCX</div>
+//           <div style={{ color: "#666", marginBottom: 16 }}>Allowed: JPEG, PNG, PDF, DOCX</div>
 
 //           <div style={{ display: "flex", justifyContent: "center", gap: 16, marginBottom: 16 }}>
 //             <button
@@ -460,10 +453,13 @@ export default UploadPage;
 //             </button>
 //           </div>
 
-//           {message && <div style={{ color: "green", marginBottom: 12, fontWeight: 600 }}>{message}</div>}
+//           {message && <div style={{ color: "green", marginBottom: 12 }}>{message}</div>}
 //           {error && <div style={{ color: "red", marginBottom: 12 }}>{error}</div>}
 
 //           <DocumentTable documents={documents} onView={handleView} onDelete={handleDelete} />
+//           {documents.length === 0 && !loading && !error && (
+//             <div style={{ color: "#666", marginTop: 12 }}>No documents uploaded yet.</div>
+//           )}
 //         </div>
 //       </div>
 //     </div>
