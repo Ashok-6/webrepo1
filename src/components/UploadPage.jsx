@@ -4,10 +4,10 @@ import Header from "./Header";
 import DocumentTable from "./DocumentTable";
 import logo from "../assets/jnj-logo.png";
 
-const API_BASE = "http://localhost:8087/api/documents";
+//const API_BASE = "http://localhost:8087/api/documents";
 
 
-// const API_BASE = import.meta.env.VITE_API_URL;
+const API_BASE = import.meta.env.VITE_API_URL;
 
 
 const UploadPage = ({ onBack }) => {
